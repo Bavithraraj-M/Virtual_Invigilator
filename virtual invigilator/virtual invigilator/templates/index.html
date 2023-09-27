@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tab Communication Example</title>
+</head>
+<body>
+    <h1>Tab Communication Example</h1>
+    <ul id="message-list"></ul>
+    <input type="text" id="message-input" placeholder="Enter a message">
+    <button id="send-button">Send</button>
+    <script>
+        const messageList = document.getElementById('message-list');
+        const messageInput = document.getElementById('message-input');
+        const sendButton = document.getElementById('send-button');
+
+        // Function to add a message to the list
+        function addMessage(message) {
+            const li = document.createElement('li');
+            li.textContent = message;
+            messageList.appendChild(li);
+        }
+
+        // Function to retrieve and display messages
+        function getMessages() {
+            fetch('/get_messages')
+                .then(response => response.json())
+                .then(data => {
+                    data.forEach(message => {
+                        addMessage(message);
+                    });
+                });
+        }
+
+        // Function to send a message to the server
+        function sendMessage() {
+            const message = messageInput.value;
+            if (message) {
+                fetch('/add_message', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ message })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'Message added successfully') {
+                        addMessage(message);
+                        messageInput.value = '';
+                    }
+                });
+            }
+        }
+
+        // Get and display messages when the page loads
+        getMessages();
+
+        // Add event listeners
+        sendButton.addEventListener('click', sendMessage);
+    </script>
+</body>
+</html>
+
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>OpenCV Web App</title>
+</head>
+<body>
+    <h1>OpenCV Web App</h1>
+    <div id="message-container">
+        <p id="message">Messages will be displayed here</p>
+    </div>
+    <img src="{{ url_for('video_feed') }}" alt="Webcam Feed">
+
+    <script>
+        // JavaScript function to update the message
+        function updateMessage(newMessage) {
+            document.getElementById("message").textContent = newMessage;
+        }
+    </script>
+</body>
+</html>
+
+ -->

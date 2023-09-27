@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>result</title>
+</head>
+<body>
+<h1> User Progress</h1>
+<table>
+    <tr>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Mark</th>
+        <th>Submission result</th>
+    </tr>
+    {% for data in res %}
+    <tr>
+        <td>{{data.name}}</td>
+        <td>{{data.email}}</td>
+        <td>{{data.mark}}</td>
+        <td>{{data.ismalprac}}</td>
+    </tr>
+    {% endfor %}
+</table>
+</body>
+</html>

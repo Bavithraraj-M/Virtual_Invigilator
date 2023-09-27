@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Document</title>
+
+    <style>
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f2f2f2;
+        margin: 0;
+        padding: 0;
+    }
+
+    h1 {
+        text-align: center;
+        padding: 20px;
+        background-color: #007BFF;
+        color: #fff;
+    }
+
+    form {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #fff;
+        border-radius: 5px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    }
+
+    p {
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+
+    input[type="radio"] {
+        margin-right: 10px;
+    }
+
+    button[type="submit"] {
+        background-color: #007BFF;
+        color: #fff;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        margin-top: 20px;
+    }
+
+    button[type="submit"]:hover {
+        background-color: #0056b3;
+    }
+</style>
+
+
+
+
+</head>
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- Your head content here -->
+</head>
+<body>
+    <h1>Quiz Contest</h1>
+
+    <!-- Full-screen button -->
+    <button id="fullScreenButton">Enter Full Screen</button>
+
+    <!-- Quiz form (initially hidden) -->
+    <form id="quiz-form" style="display: none;" action="/submitquiz" method="post" >
+        <h1>Quiz</h1>
+
+        <!-- Question 1 -->
+        <div class="question">
+           {% for q in ques %}
+            </p>{{q.question}}<p>
+            <input type="radio" name="{{q.id}}" value="{{q.option1}}">{{q.option1}}
+            <input type="radio" name="{{q.id}}" value="{{q.option2}}">{{q.option2}}
+            <input type="radio" name="{{q.id}}" value="{{q.option3}}">{{q.option3}}
+            <input type="radio" name="{{q.id}}" value="{{q.option4}}">{{q.option4}}
+        {% endfor %}
+            <br><br>
+        <button type="submit" id="submitButton" style="display: none;">Submit</button>
+        </div>
+    </form>
+
+    <!-- JavaScript for full-screen mode and exit/switch/tab change warnings -->
+    <script>
+        let interactionCount = 0;
+        let interactionInProgress = false;
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const fullScreenButton = document.getElementById("fullScreenButton");
+            const quizForm = document.getElementById("quiz-form");
+            const submitButton = document.getElementById("submitButton");
+
+            fullScreenButton.addEventListener("click", function () {
+                const quizElement = document.documentElement;
+
+                if (quizElement.requestFullscreen) {
+                    quizElement.requestFullscreen();
+                } else if (quizElement.mozRequestFullScreen) {
+                    quizElement.mozRequestFullScreen();
+                } else if (quizElement.webkitRequestFullscreen) {
+                    quizElement.webkitRequestFullscreen();
+                } else if (quizElement.msRequestFullscreen) {
+                    quizElement.msRequestFullscreen();
+                }
+
+                quizForm.style.display = "block";
+                submitButton.style.display = "block";
+            });
+
+            // Handle form submission
+            quizForm.addEventListener("submit", function (event) {
+                event.preventDefault(); // Prevent the default form submission
+                // You can add your own code here to process the form data or submit it via AJAX
+                alert("Form submitted!");
+            });
+
+            // Track visibility changes (tab switch)
+            document.addEventListener("visibilitychange", function () {
+                if (document.visibilityState === "hidden" && !interactionInProgress) {
+                    interactionInProgress = true;
+                    interactionCount++;
+                    handleInteractions();
+                }
+            });
+
+            // Track window blur events (window change)
+            window.addEventListener("blur", function () {
+                if (!interactionInProgress) {
+                    interactionInProgress = true;
+                    interactionCount++;
+                    handleInteractions();
+                }
+            });
+
+            document.addEventListener("fullscreenchange", function () {
+                if (!document.fullscreenElement && !interactionInProgress) {
+                    // User exited fullscreen mode
+                    interactionInProgress = true;
+                    quizForm.style.display = "none"; // Hide the quiz form
+                    submitButton.style.display = "none"; // Hide the submit button
+                    interactionCount++;
+                    handleInteractions();
+                    const quizElement = document.documentElement;
+                    if (quizElement.requestFullscreen) {
+                        quizElement.requestFullscreen();
+                    } else if (quizElement.mozRequestFullScreen) {
+                        quizElement.mozRequestFullScreen();
+                    } else if (quizElement.webkitRequestFullscreen) {
+                        quizElement.webkitRequestFullscreen();
+                    } else if (quizElement.msRequestFullscreen) {
+                        quizElement.msRequestFullscreen();
+                    }
+                }
+            });
+
+            function handleInteractions() {
+                if (interactionCount >= 3) {
+                    // Automatically submit the form after three interactions
+                    alert("You've attempted to switch tabs, switch windows, or exit fullscreen three times. The quiz will now be submitted.");
+                    quizForm.submit();
+                } else {
+                    // Give a warning message (customize as needed) and close the alert after a brief delay
+                    const warningMessage = "Please stay in this tab and in fullscreen mode to complete the quiz.";
+                    alert(warningMessage);
+                    setTimeout(() => {
+                        interactionInProgress = false;
+                    }, 100); // Close the alert after 100 milliseconds
+                }
+            }
+        });
+    </script>
+</body>
+</html>
+

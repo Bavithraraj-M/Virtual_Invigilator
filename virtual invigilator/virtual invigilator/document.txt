@@ -1,0 +1,21 @@
+deploy.prototxt: This file contains the architecture of the deep learning model.
+
+https://github.com/opencv/opencv/blob/master/samples/dnn/face_detector/deploy.prototxt
+
+
+
+res10_300x300_ssd_iter_140000.caffemodel: This file contains the trained weights of the deep learning model.
+
+https://github.com/opencv/opencv_3rdparty/raw/dnn_samples_face_detector_20170830/res10_300x300_ssd_iter_140000.caffemodel
+
+
+
+haarcascade_frontalface_default.xml: XML file containing the trained data for detecting frontal faces.
+
+https://github.com/opencv/opencv/blob/4.x/data/haarcascades/haarcascade_frontalface_default.xml
+
+
+
+haarcascade_eye.xml is the XML file containing the trained data for detecting eyes.
+
+https://github.com/opencv/opencv/blob/4.x/data/haarcascades/haarcascade_eye.xml
