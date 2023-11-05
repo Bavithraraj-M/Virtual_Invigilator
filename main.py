@@ -9,13 +9,14 @@ app =Flask(__name__)
 app.config["MYSQL_HOST"]="localhost"
 app.config["MYSQL_USER"]="root"
 app.config["MYSQL_PASSWORD"]="Mithun@2003"
+
 app.config["MYSQL_DB"]="crud"
 app.config["MYSQL_CURSORCLASS"]="DictCursor"
 mysql=MySQL(app)
 
 user_name=""
 user_mail=""
-
+ismalprac=False;
 @app.route("/signup",methods=['GET','POST'])
 
 def signup():
@@ -56,6 +57,7 @@ def login():
                 return redirect(url_for("home"))
 
             else:
+                cur.close()
                 print("<h3> Sign Up to continue . . .<h3>")
                 return render_template('signup.html')
          except Exception as e:
@@ -80,6 +82,7 @@ def alogin():
                 return redirect(url_for("result"))
             else:
                 return render_template('signup.html')
+            cur.close()
          except Exception as e:
             print(e)
          finally:
@@ -94,6 +97,7 @@ def result():
     sql="select * from marks"
     cur.execute(sql)
     res=cur.fetchall()
+    cur.close()
     return render_template("result.html",res=res)
 
 @app.route("/instruct",methods=["POST","GET"])
@@ -121,11 +125,12 @@ message = ""
 # Create a flag to control the video capture loop
 capture_active = False
 
-def opencv_thread():
+def opencv_thread(connection):
     global cap, capture_active,warning_count,message_count,message,blink_threshold,blink_counter
     cap = cv2.VideoCapture(0)  # Initialize video capture here
     capture_active = True
     while capture_active:
+        global ismalprac;
         ret, frame = cap.read()
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         faces = face_cascade.detectMultiScale(
@@ -173,8 +178,23 @@ def opencv_thread():
             message_count += 1
             if message == "No eyes detected (looking away?)" or message == "Multiple people detected!":
                 if message_count > 200:
-                    print("You are disqualified from the exam")
-                   
+                    ismalprac=True;
+                    """"" print("You are disqualified from the exam")
+                    #con = mysql.connection.cursor()
+                    try:
+                        con = connection.cursor()
+                    except:
+                        con = connection.cursor()
+
+                    #sql = "insert into marks (name,email,mark,ismalprac) value (%s,%s,%s,%s)"
+                    sql = "insert into marks (name,email,mark,ismalprac) value (%s,%s,%s,%s)"
+                    "" con.execute(sql, [user_name, user_mail, str(count), "tabswitch"])
+                    mysql.connection.commit()
+                    con.close()
+                    con.execute(sql, [user_name, user_mail, '0', "look away from screen"])
+                    mysql.connection.commit()
+                    con.close()"""
+                    capture_active=False
                     break
         else:
             if message_count > 18:
@@ -185,8 +205,13 @@ def opencv_thread():
             message_count = 0
 
         if warning_count >= 5:
-           
-
+            """ con = mysql.connection.cursor()
+            sql = "insert into marks (name,email,mark,ismalprac) value (%s,%s,%s,%s)"
+            con.execute(sql, [user_name, user_mail, '0', "mal-practice[eye/face]"])
+            mysql.connection.commit()
+            con.close()"""
+            ismalprac=True;
+            capture_active=False;
             print("You are disqualified from the exam")
             break
 
@@ -197,7 +222,9 @@ def opencv_thread():
 def start_capture():
     global cap
     if cap is None:
-        capture_thread = threading.Thread(target=opencv_thread)
+        con = mysql.connection
+        capture_thread = threading.Thread(target=opencv_thread,args=(con,))
+
         capture_thread.start()
     return redirect(url_for("instruct"))
 
@@ -248,31 +275,51 @@ def quiz():
 
 @app.route("/submitquiz",methods=["POST","GET"])
 def submitquiz():
-    global capture_active
+    global capture_active,ismalprac
     capture_active = False
+    count = 0
 
-    count=0
-    mal_prac=False
-    for q in ques:
-        q_id=str(q.id)
-        try:
-            selected_opt=request.form[q_id]       # ... checking no of question crtly solved by user
-        except:
-            mal_prac=True
-            continue
-        crt_opt=q.get_correct_option()
-        if crt_opt==selected_opt:
-            count+=1
-    con = mysql.connection.cursor()
-    sql = "insert into marks (name,email,mark,ismalprac) value (%s,%s,%s,%s)"
-    if mal_prac:
-        con.execute(sql, [user_name, user_mail, str(count), "tabswitch"])
+    if ismalprac:
+        con = mysql.connection.cursor()
+        sql = "insert into marks (name,email,mark,ismalprac) value (%s,%s,%s,%s)"
+        con.execute(sql, [user_name, user_mail, 0, "look away from screen"])
         mysql.connection.commit()
         con.close()
+
+
     else:
-        con.execute(sql, [user_name, user_mail, str(count), "no malpractice"])
-        mysql.connection.commit()
-        con.close()
+
+        mal_prac=False
+        ismalprac=True
+
+        for q in ques:
+            q_id=str(q.id)
+            try:
+                selected_opt=request.form[q_id]       # ... checking no of question crtly solved by user
+                if mal_prac :
+                    ismalprac=False;
+
+
+
+            except:
+                mal_prac=True
+
+                continue
+            crt_opt=q.get_correct_option()
+            if crt_opt==selected_opt:
+                count+=1
+
+        con = mysql.connection.cursor()
+        sql = "insert into marks (name,email,mark,ismalprac) value (%s,%s,%s,%s)"
+        if not mal_prac or (mal_prac and not ismalprac) :
+
+            con.execute(sql, [user_name, user_mail, str(count), "no malpractice"])
+            mysql.connection.commit()
+            con.close()
+        else:
+            con.execute(sql, [user_name, user_mail, str(count), "tabswitch"])
+            mysql.connection.commit()
+            con.close()
     return str(count);
 #---------------------------------------------------------------------
 
